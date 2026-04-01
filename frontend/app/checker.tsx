@@ -12,13 +12,14 @@ import {
   Linking,
   Alert,
   Share,
+  TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ViewShot from 'react-native-view-shot';
-import * as MediaLibrary from 'expo-media-library';
-import * as FileSystem from 'expo-file-system';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 import { useLanguage } from '../src/context/LanguageContext';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../src/constants/theme';
 
@@ -27,16 +28,16 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-type CheckItemKey = 'screenDisplay' | 'keyboard' | 'battery' | 'diskHealth' | 'webcamMic' | 'speaker' | 'usbPorts';
-type CheckDescKey = 'screenDisplayDesc' | 'keyboardDesc' | 'batteryDesc' | 'diskHealthDesc' | 'webcamMicDesc' | 'speakerDesc' | 'usbPortsDesc';
-type CheckHowToKey = 'screenDisplayHowTo' | 'keyboardHowTo' | 'batteryHowTo' | 'diskHealthHowTo' | 'webcamMicHowTo' | 'speakerHowTo' | 'usbPortsHowTo';
+type CheckItemKey = 'screenDisplay' | 'keyboard' | 'battery' | 'diskHealth' | 'webcamMic' | 'speaker' | 'usbPorts' | 'touchpad' | 'hingeBody' | 'chargerPort';
+type CheckDescKey = 'screenDisplayDesc' | 'keyboardDesc' | 'batteryDesc' | 'diskHealthDesc' | 'webcamMicDesc' | 'speakerDesc' | 'usbPortsDesc' | 'touchpadDesc' | 'hingeBodyDesc' | 'chargerPortDesc';
+type CheckHowToKey = 'screenDisplayHowTo' | 'keyboardHowTo' | 'batteryHowTo' | 'diskHealthHowTo' | 'webcamMicHowTo' | 'speakerHowTo' | 'usbPortsHowTo' | 'touchpadHowTo' | 'hingeBodyHowTo' | 'chargerPortHowTo';
 
 interface CheckItem {
   id: string;
   titleKey: CheckItemKey;
   descKey: CheckDescKey;
   howToKey: CheckHowToKey;
-  icon: 'monitor' | 'keyboard' | 'battery' | 'harddisk' | 'webcam' | 'volume-high' | 'usb';
+  icon: 'monitor' | 'keyboard' | 'battery' | 'harddisk' | 'webcam' | 'volume-high' | 'usb' | 'gesture-tap' | 'laptop' | 'power-plug';
   onlineToolUrl?: string;
 }
 
@@ -56,6 +57,13 @@ const checkItems: CheckItem[] = [
     howToKey: 'keyboardHowTo',
     icon: 'keyboard',
     onlineToolUrl: 'https://www.keyboardtester.com/',
+  },
+  {
+    id: 'touchpad',
+    titleKey: 'touchpad',
+    descKey: 'touchpadDesc',
+    howToKey: 'touchpadHowTo',
+    icon: 'gesture-tap',
   },
   {
     id: 'battery',
@@ -92,27 +100,47 @@ const checkItems: CheckItem[] = [
     howToKey: 'usbPortsHowTo',
     icon: 'usb',
   },
+  {
+    id: 'hinge',
+    titleKey: 'hingeBody',
+    descKey: 'hingeBodyDesc',
+    howToKey: 'hingeBodyHowTo',
+    icon: 'laptop',
+  },
+  {
+    id: 'charger',
+    titleKey: 'chargerPort',
+    descKey: 'chargerPortDesc',
+    howToKey: 'chargerPortHowTo',
+    icon: 'power-plug',
+  },
 ];
 
 export default function CheckerScreen() {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const viewShotRef = useRef<ViewShot>(null);
-  const [results, setResults] = useState<Record<string, boolean | null>>({
-    screen: null,
-    keyboard: null,
-    battery: null,
-    disk: null,
-    webcam: null,
-    speaker: null,
-    usb: null,
+  
+  const initialResults: Record<string, boolean | null> = {};
+  const initialNotes: Record<string, string> = {};
+  checkItems.forEach(item => {
+    initialResults[item.id] = null;
+    initialNotes[item.id] = '';
   });
+  
+  const [results, setResults] = useState<Record<string, boolean | null>>(initialResults);
+  const [notes, setNotes] = useState<Record<string, string>>(initialNotes);
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
   const [showExportModal, setShowExportModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const setResult = (id: string, passed: boolean) => {
     setResults(prev => ({ ...prev, [id]: passed }));
+  };
+
+  const setNote = (id: string, note: string) => {
+    setNotes(prev => ({ ...prev, [id]: note }));
   };
 
   const toggleExpanded = (id: string) => {
@@ -139,65 +167,266 @@ export default function CheckerScreen() {
     const passCount = values.filter(v => v === true).length;
     const ratio = passCount / values.length;
     
-    if (ratio === 1) return { label: t.excellent, color: COLORS.success };
-    if (ratio >= 0.75) return { label: t.good, color: COLORS.primary };
-    if (ratio >= 0.5) return { label: t.needsAttention, color: COLORS.warning };
-    return { label: t.poor, color: COLORS.error };
+    if (ratio === 1) return { label: t.excellent, color: COLORS.success, colorHex: '#4CAF50' };
+    if (ratio >= 0.75) return { label: t.good, color: COLORS.primary, colorHex: '#00BFA6' };
+    if (ratio >= 0.5) return { label: t.needsAttention, color: COLORS.warning, colorHex: '#FFC107' };
+    return { label: t.poor, color: COLORS.error, colorHex: '#F44336' };
   };
 
   const getResultsSummary = () => {
-    const passed: string[] = [];
-    const failed: string[] = [];
-    const notTested: string[] = [];
+    const passed: { name: string; note: string }[] = [];
+    const failed: { name: string; note: string }[] = [];
+    const notTested: { name: string }[] = [];
 
     checkItems.forEach(item => {
       const result = results[item.id];
       const name = t[item.titleKey];
-      if (result === true) passed.push(name);
-      else if (result === false) failed.push(name);
-      else notTested.push(name);
+      const note = notes[item.id];
+      if (result === true) passed.push({ name, note });
+      else if (result === false) failed.push({ name, note });
+      else notTested.push({ name });
     });
 
     return { passed, failed, notTested };
   };
 
-  const handleSaveImage = async () => {
-    try {
-      setIsSaving(true);
-      
-      // Request permissions
-      if (Platform.OS !== 'web') {
-        const { status } = await MediaLibrary.requestPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('Permission Required', 'Please allow access to save images');
-          setIsSaving(false);
-          return;
-        }
-      }
+  const currentDate = new Date().toLocaleDateString(language === 'id' ? 'id-ID' : 'en-US', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 
-      // Capture the view
-      if (viewShotRef.current) {
-        const uri = await viewShotRef.current.capture?.();
-        if (uri) {
-          if (Platform.OS === 'web') {
-            // For web, create download link
-            const link = document.createElement('a');
-            link.href = uri;
-            link.download = `diagnosa-laptop-${Date.now()}.png`;
-            link.click();
-            Alert.alert(t.imageSaved);
-          } else {
-            // For mobile, save to gallery
-            await MediaLibrary.saveToLibraryAsync(uri);
-            Alert.alert(t.imageSaved);
+  const generatePdfHtml = () => {
+    const overall = getOverallCondition();
+    const summary = getResultsSummary();
+
+    const passedHtml = summary.passed.map(item => `
+      <div class="item passed">
+        <span class="icon">✓</span>
+        <span class="name">${item.name}</span>
+        ${item.note ? `<span class="note">${item.note}</span>` : ''}
+      </div>
+    `).join('');
+
+    const failedHtml = summary.failed.map(item => `
+      <div class="item failed">
+        <span class="icon">✗</span>
+        <span class="name">${item.name}</span>
+        ${item.note ? `<span class="note">${item.note}</span>` : ''}
+      </div>
+    `).join('');
+
+    const notTestedHtml = summary.notTested.map(item => `
+      <div class="item not-tested">
+        <span class="icon">-</span>
+        <span class="name">${item.name}</span>
+      </div>
+    `).join('');
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${t.exportCertTitle}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
           }
-        }
+          .certificate {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+          }
+          .header {
+            background: linear-gradient(135deg, #0D0D0D 0%, #1A1A1A 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-bottom: 4px solid #00BFA6;
+          }
+          .header h1 {
+            font-size: 20px;
+            color: #00BFA6;
+            margin-bottom: 8px;
+            letter-spacing: 2px;
+          }
+          .header .app-name {
+            font-size: 14px;
+            color: #B0B0B0;
+            margin-bottom: 16px;
+          }
+          .header .date {
+            font-size: 13px;
+            color: #707070;
+          }
+          .overall {
+            padding: 20px 30px;
+            text-align: center;
+            background: #f9f9f9;
+            border-bottom: 1px solid #eee;
+          }
+          .overall-badge {
+            display: inline-block;
+            padding: 12px 32px;
+            border-radius: 50px;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+          }
+          .overall-label {
+            display: block;
+            margin-top: 8px;
+            color: #666;
+            font-size: 12px;
+          }
+          .content {
+            padding: 24px 30px;
+          }
+          .section {
+            margin-bottom: 20px;
+          }
+          .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #eee;
+          }
+          .section-title.passed { color: #4CAF50; border-color: #4CAF50; }
+          .section-title.failed { color: #F44336; border-color: #F44336; }
+          .section-title.not-tested { color: #999; border-color: #ddd; }
+          .item {
+            display: flex;
+            align-items: flex-start;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+          }
+          .item:last-child { border-bottom: none; }
+          .item .icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            flex-shrink: 0;
+          }
+          .item.passed .icon { background: #E8F5E9; color: #4CAF50; }
+          .item.failed .icon { background: #FFEBEE; color: #F44336; }
+          .item.not-tested .icon { background: #f5f5f5; color: #999; }
+          .item .name {
+            font-size: 14px;
+            color: #333;
+            flex: 1;
+          }
+          .item .note {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            font-style: italic;
+            margin-top: 4px;
+            padding-left: 36px;
+            width: 100%;
+          }
+          .footer {
+            background: #0D0D0D;
+            color: #00BFA6;
+            padding: 16px 30px;
+            text-align: center;
+            font-size: 11px;
+          }
+          .footer .wa {
+            color: #25D366;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="certificate">
+          <div class="header">
+            <h1>${t.exportCertTitle}</h1>
+            <div class="app-name">Superapp Panduan Laptop</div>
+            <div class="date">${t.exportDate}: ${currentDate}</div>
+          </div>
+          
+          ${overall ? `
+          <div class="overall">
+            <div class="overall-badge" style="background-color: ${overall.colorHex}">
+              ${overall.label}
+            </div>
+            <span class="overall-label">${t.exportSummary}</span>
+          </div>
+          ` : ''}
+          
+          <div class="content">
+            ${summary.passed.length > 0 ? `
+            <div class="section">
+              <div class="section-title passed">${t.exportPassedItems} (${summary.passed.length})</div>
+              ${passedHtml}
+            </div>
+            ` : ''}
+            
+            ${summary.failed.length > 0 ? `
+            <div class="section">
+              <div class="section-title failed">${t.exportFailedItems} (${summary.failed.length})</div>
+              ${failedHtml}
+            </div>
+            ` : ''}
+            
+            ${summary.notTested.length > 0 ? `
+            <div class="section">
+              <div class="section-title not-tested">${t.exportNotTested} (${summary.notTested.length})</div>
+              ${notTestedHtml}
+            </div>
+            ` : ''}
+          </div>
+          
+          <div class="footer">
+            <span class="wa">📱</span> ${t.pdfFooter}
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  };
+
+  const handleGeneratePdf = async () => {
+    try {
+      setIsGeneratingPdf(true);
+      const html = generatePdfHtml();
+      
+      const { uri } = await Print.printToFileAsync({
+        html,
+        base64: false,
+      });
+
+      if (Platform.OS === 'web') {
+        // For web, print directly
+        await Print.printAsync({ html });
+      } else {
+        // For mobile, share the PDF
+        await Sharing.shareAsync(uri, {
+          mimeType: 'application/pdf',
+          dialogTitle: t.downloadPdf,
+          UTI: 'com.adobe.pdf',
+        });
       }
+      
+      Alert.alert(t.pdfGenerated);
     } catch (error) {
-      console.error('Error saving image:', error);
-      Alert.alert('Error', 'Failed to save image');
+      console.error('Error generating PDF:', error);
+      Alert.alert('Error', 'Failed to generate PDF');
     } finally {
-      setIsSaving(false);
+      setIsGeneratingPdf(false);
     }
   };
 
@@ -219,11 +448,6 @@ export default function CheckerScreen() {
 
   const overall = getOverallCondition();
   const summary = getResultsSummary();
-  const currentDate = new Date().toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
 
   return (
     <SafeAreaView style={styles.container}>
@@ -251,7 +475,7 @@ export default function CheckerScreen() {
         <View style={styles.illustration}>
           <MaterialCommunityIcons
             name="laptop"
-            size={100}
+            size={80}
             color={COLORS.primary}
           />
           <Text style={styles.illustrationText}>
@@ -280,7 +504,7 @@ export default function CheckerScreen() {
                 <View style={styles.checkItemInfo}>
                   <MaterialCommunityIcons
                     name={item.icon}
-                    size={28}
+                    size={26}
                     color={COLORS.primary}
                   />
                   <View style={styles.checkItemText}>
@@ -376,6 +600,16 @@ export default function CheckerScreen() {
                 </View>
               )}
 
+              {/* Custom Notes Input */}
+              <TextInput
+                style={styles.noteInput}
+                placeholder={t.addNotePlaceholder}
+                placeholderTextColor={COLORS.textMuted}
+                value={notes[item.id]}
+                onChangeText={(text) => setNote(item.id, text)}
+                multiline={false}
+              />
+
               {/* Pass/Fail Buttons */}
               <View style={styles.buttonRow}>
                 <TouchableOpacity
@@ -440,18 +674,35 @@ export default function CheckerScreen() {
           )}
         </View>
 
-        {/* Save/Export Button */}
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={() => setShowExportModal(true)}
-        >
-          <MaterialCommunityIcons
-            name="content-save-outline"
-            size={24}
-            color={COLORS.background}
-          />
-          <Text style={styles.saveButtonText}>{t.saveResult}</Text>
-        </TouchableOpacity>
+        {/* Export Buttons */}
+        <View style={styles.exportButtonsContainer}>
+          <TouchableOpacity
+            style={[styles.exportButton, styles.pdfButton]}
+            onPress={handleGeneratePdf}
+            disabled={isGeneratingPdf}
+          >
+            <MaterialCommunityIcons
+              name="file-pdf-box"
+              size={24}
+              color={COLORS.background}
+            />
+            <Text style={styles.exportButtonText}>
+              {isGeneratingPdf ? t.generatingPdf : t.downloadPdf}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.exportButton, styles.shareImageButton]}
+            onPress={() => setShowExportModal(true)}
+          >
+            <MaterialCommunityIcons
+              name="share-variant"
+              size={22}
+              color={COLORS.primary}
+            />
+            <Text style={styles.shareImageButtonText}>{t.shareResult}</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
       {/* Export Modal */}
@@ -476,7 +727,7 @@ export default function CheckerScreen() {
                     size={40}
                     color={COLORS.primary}
                   />
-                  <Text style={styles.exportTitle}>{t.exportTitle}</Text>
+                  <Text style={styles.exportTitle}>{t.exportCertTitle}</Text>
                   <Text style={styles.exportDate}>{currentDate}</Text>
                 </View>
 
@@ -503,7 +754,12 @@ export default function CheckerScreen() {
                       </Text>
                     </View>
                     {summary.passed.map((item, index) => (
-                      <Text key={index} style={styles.exportItem}>• {item}</Text>
+                      <View key={index}>
+                        <Text style={styles.exportItem}>• {item.name}</Text>
+                        {item.note ? (
+                          <Text style={styles.exportItemNote}>  "{item.note}"</Text>
+                        ) : null}
+                      </View>
                     ))}
                   </View>
                 )}
@@ -522,7 +778,12 @@ export default function CheckerScreen() {
                       </Text>
                     </View>
                     {summary.failed.map((item, index) => (
-                      <Text key={index} style={styles.exportItem}>• {item}</Text>
+                      <View key={index}>
+                        <Text style={styles.exportItem}>• {item.name}</Text>
+                        {item.note ? (
+                          <Text style={styles.exportItemNote}>  "{item.note}"</Text>
+                        ) : null}
+                      </View>
                     ))}
                   </View>
                 )}
@@ -541,7 +802,7 @@ export default function CheckerScreen() {
                       </Text>
                     </View>
                     {summary.notTested.map((item, index) => (
-                      <Text key={index} style={[styles.exportItem, { color: COLORS.textMuted }]}>• {item}</Text>
+                      <Text key={index} style={[styles.exportItem, { color: COLORS.textMuted }]}>• {item.name}</Text>
                     ))}
                   </View>
                 )}
@@ -553,7 +814,7 @@ export default function CheckerScreen() {
                     size={16}
                     color={COLORS.primary}
                   />
-                  <Text style={styles.watermarkText}>{t.exportWatermark}</Text>
+                  <Text style={styles.watermarkText}>{t.pdfFooter}</Text>
                 </View>
               </ViewShot>
 
@@ -562,7 +823,6 @@ export default function CheckerScreen() {
                 <TouchableOpacity
                   style={[styles.modalButton, styles.shareButton]}
                   onPress={handleShare}
-                  disabled={isSaving}
                 >
                   <MaterialCommunityIcons
                     name="share-variant"
@@ -574,16 +834,16 @@ export default function CheckerScreen() {
 
                 <TouchableOpacity
                   style={[styles.modalButton, styles.downloadButton]}
-                  onPress={handleSaveImage}
-                  disabled={isSaving}
+                  onPress={handleGeneratePdf}
+                  disabled={isGeneratingPdf}
                 >
                   <MaterialCommunityIcons
-                    name="download"
+                    name="file-pdf-box"
                     size={20}
                     color={COLORS.background}
                   />
                   <Text style={styles.downloadButtonText}>
-                    {isSaving ? t.savingImage : t.saveResult}
+                    {isGeneratingPdf ? t.generatingPdf : 'PDF'}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -634,7 +894,7 @@ const styles = StyleSheet.create({
   illustration: {
     backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.xl,
+    padding: SPACING.lg,
     alignItems: 'center',
     marginBottom: SPACING.lg,
     borderWidth: 1,
@@ -643,7 +903,7 @@ const styles = StyleSheet.create({
   illustrationText: {
     color: COLORS.textSecondary,
     fontSize: FONT_SIZES.md,
-    marginTop: SPACING.md,
+    marginTop: SPACING.sm,
   },
   instructionsCard: {
     flexDirection: 'row',
@@ -663,7 +923,7 @@ const styles = StyleSheet.create({
   checkItem: {
     backgroundColor: COLORS.cardBackground,
     borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.lg,
+    padding: SPACING.md,
     marginBottom: SPACING.md,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
@@ -686,7 +946,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xs,
   },
   checkItemTitle: {
-    fontSize: FONT_SIZES.lg,
+    fontSize: FONT_SIZES.md,
     fontWeight: '600',
     color: COLORS.textPrimary,
     flex: 1,
@@ -703,7 +963,7 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     marginTop: SPACING.sm,
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
     borderLeftWidth: 3,
     borderLeftColor: COLORS.primary,
   },
@@ -721,9 +981,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   howToText: {
-    fontSize: FONT_SIZES.md,
+    fontSize: FONT_SIZES.sm,
     color: COLORS.textSecondary,
-    lineHeight: 22,
+    lineHeight: 20,
   },
   onlineToolButton: {
     flexDirection: 'row',
@@ -759,7 +1019,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
   },
   caraCheckButton: {
     flexDirection: 'row',
@@ -786,18 +1046,29 @@ const styles = StyleSheet.create({
     color: COLORS.info,
     fontWeight: '500',
   },
+  noteInput: {
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.sm,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    marginBottom: SPACING.sm,
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.textPrimary,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceBorder,
+  },
   buttonRow: {
     flexDirection: 'row',
-    gap: SPACING.md,
+    gap: SPACING.sm,
   },
   resultButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: SPACING.md,
+    paddingVertical: SPACING.sm,
     borderRadius: BORDER_RADIUS.md,
-    gap: SPACING.sm,
+    gap: SPACING.xs,
     borderWidth: 2,
   },
   passButton: {
@@ -815,7 +1086,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.error,
   },
   resultButtonText: {
-    fontSize: FONT_SIZES.md,
+    fontSize: FONT_SIZES.sm,
     fontWeight: '600',
     color: COLORS.success,
   },
@@ -828,14 +1099,14 @@ const styles = StyleSheet.create({
   overallCard: {
     backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.xl,
+    padding: SPACING.lg,
     alignItems: 'center',
     marginTop: SPACING.md,
     borderWidth: 1,
     borderColor: COLORS.primary,
   },
   overallTitle: {
-    fontSize: FONT_SIZES.xl,
+    fontSize: FONT_SIZES.lg,
     fontWeight: 'bold',
     color: COLORS.textPrimary,
     marginBottom: SPACING.md,
@@ -854,20 +1125,35 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.xxl,
     color: COLORS.textMuted,
   },
-  saveButton: {
+  exportButtonsContainer: {
+    marginTop: SPACING.lg,
+    gap: SPACING.md,
+  },
+  exportButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.primary,
-    padding: SPACING.lg,
+    padding: SPACING.md,
     borderRadius: BORDER_RADIUS.lg,
-    marginTop: SPACING.lg,
     gap: SPACING.sm,
   },
-  saveButtonText: {
+  pdfButton: {
+    backgroundColor: COLORS.primary,
+  },
+  shareImageButton: {
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  exportButtonText: {
     color: COLORS.background,
-    fontSize: FONT_SIZES.lg,
+    fontSize: FONT_SIZES.md,
     fontWeight: 'bold',
+  },
+  shareImageButtonText: {
+    color: COLORS.primary,
+    fontSize: FONT_SIZES.md,
+    fontWeight: '600',
   },
   // Modal Styles
   modalOverlay: {
@@ -896,10 +1182,11 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.surfaceBorder,
   },
   exportTitle: {
-    fontSize: FONT_SIZES.xl,
+    fontSize: FONT_SIZES.lg,
     fontWeight: 'bold',
-    color: COLORS.textPrimary,
+    color: COLORS.primary,
     marginTop: SPACING.sm,
+    textAlign: 'center',
   },
   exportDate: {
     fontSize: FONT_SIZES.sm,
@@ -931,9 +1218,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   exportItem: {
-    fontSize: FONT_SIZES.md,
+    fontSize: FONT_SIZES.sm,
     color: COLORS.textSecondary,
     marginLeft: SPACING.lg,
+    marginBottom: SPACING.xs,
+  },
+  exportItemNote: {
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.textMuted,
+    fontStyle: 'italic',
+    marginLeft: SPACING.xl,
     marginBottom: SPACING.xs,
   },
   watermarkContainer: {
