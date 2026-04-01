@@ -17,7 +17,7 @@ import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../src/constants/the
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - SPACING.lg * 3) / 2;
 
-type IconName = 'laptop-chromebook' | 'rocket-launch' | 'microsoft-windows' | 'download-circle';
+type IconName = 'laptop' | 'rocket-launch' | 'microsoft-windows' | 'download-circle';
 
 interface MenuCard {
   id: string;
@@ -30,7 +30,7 @@ interface MenuCard {
 const menuCards: MenuCard[] = [
   {
     id: 'checker',
-    icon: 'laptop-chromebook',
+    icon: 'laptop',
     titleKey: 'checkerTitle',
     descKey: 'checkerDesc',
     route: '/checker',

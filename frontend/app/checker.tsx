@@ -5,6 +5,9 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  LayoutAnimation,
+  Platform,
+  UIManager,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,10 +15,16 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLanguage } from '../src/context/LanguageContext';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../src/constants/theme';
 
+// Enable LayoutAnimation on Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 interface CheckItem {
   id: string;
   titleKey: 'screenDisplay' | 'keyboard' | 'battery' | 'diskHealth';
   descKey: 'screenDisplayDesc' | 'keyboardDesc' | 'batteryDesc' | 'diskHealthDesc';
+  howToKey: 'screenDisplayHowTo' | 'keyboardHowTo' | 'batteryHowTo' | 'diskHealthHowTo';
   icon: 'monitor' | 'keyboard' | 'battery' | 'harddisk';
 }
 
@@ -24,24 +33,28 @@ const checkItems: CheckItem[] = [
     id: 'screen',
     titleKey: 'screenDisplay',
     descKey: 'screenDisplayDesc',
+    howToKey: 'screenDisplayHowTo',
     icon: 'monitor',
   },
   {
     id: 'keyboard',
     titleKey: 'keyboard',
     descKey: 'keyboardDesc',
+    howToKey: 'keyboardHowTo',
     icon: 'keyboard',
   },
   {
     id: 'battery',
     titleKey: 'battery',
     descKey: 'batteryDesc',
+    howToKey: 'batteryHowTo',
     icon: 'battery',
   },
   {
     id: 'disk',
     titleKey: 'diskHealth',
     descKey: 'diskHealthDesc',
+    howToKey: 'diskHealthHowTo',
     icon: 'harddisk',
   },
 ];
@@ -55,9 +68,15 @@ export default function CheckerScreen() {
     battery: null,
     disk: null,
   });
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
   const setResult = (id: string, passed: boolean) => {
     setResults(prev => ({ ...prev, [id]: passed }));
+  };
+
+  const toggleExpanded = (id: string) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpandedItems(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
   const getOverallCondition = () => {
@@ -99,7 +118,7 @@ export default function CheckerScreen() {
         {/* Illustration */}
         <View style={styles.illustration}>
           <MaterialCommunityIcons
-            name="laptop-chromebook"
+            name="laptop"
             size={100}
             color={COLORS.primary}
           />
@@ -119,70 +138,131 @@ export default function CheckerScreen() {
         </View>
 
         {/* Checklist Items */}
-        {checkItems.map(item => (
-          <View key={item.id} style={styles.checkItem}>
-            <View style={styles.checkItemHeader}>
-              <View style={styles.checkItemInfo}>
-                <MaterialCommunityIcons
-                  name={item.icon}
-                  size={28}
-                  color={COLORS.primary}
-                />
-                <View style={styles.checkItemText}>
-                  <Text style={styles.checkItemTitle}>{t[item.titleKey]}</Text>
-                  <Text style={styles.checkItemDesc}>{t[item.descKey]}</Text>
+        {checkItems.map(item => {
+          const isExpanded = expandedItems[item.id];
+          
+          return (
+            <View key={item.id} style={styles.checkItem}>
+              {/* Header with Title and Info Button */}
+              <View style={styles.checkItemHeader}>
+                <View style={styles.checkItemInfo}>
+                  <MaterialCommunityIcons
+                    name={item.icon}
+                    size={28}
+                    color={COLORS.primary}
+                  />
+                  <View style={styles.checkItemText}>
+                    <View style={styles.titleRow}>
+                      <Text style={styles.checkItemTitle}>{t[item.titleKey]}</Text>
+                      <TouchableOpacity
+                        style={styles.infoButton}
+                        onPress={() => toggleExpanded(item.id)}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      >
+                        <MaterialCommunityIcons
+                          name={isExpanded ? 'chevron-up-circle' : 'help-circle-outline'}
+                          size={22}
+                          color={isExpanded ? COLORS.primary : COLORS.textMuted}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                    <Text style={styles.checkItemDesc}>{t[item.descKey]}</Text>
+                  </View>
                 </View>
               </View>
-            </View>
-            <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={[
-                  styles.resultButton,
-                  styles.passButton,
-                  results[item.id] === true && styles.passButtonActive,
-                ]}
-                onPress={() => setResult(item.id, true)}
-              >
-                <MaterialCommunityIcons
-                  name="check"
-                  size={20}
-                  color={results[item.id] === true ? COLORS.background : COLORS.success}
-                />
-                <Text
-                  style={[
-                    styles.resultButtonText,
-                    results[item.id] === true && styles.resultButtonTextActive,
-                  ]}
+
+              {/* Expandable How-To Section */}
+              {isExpanded && (
+                <View style={styles.howToContainer}>
+                  <View style={styles.howToHeader}>
+                    <MaterialCommunityIcons
+                      name="lightbulb-on-outline"
+                      size={18}
+                      color={COLORS.primary}
+                    />
+                    <Text style={styles.howToTitle}>{t.howToCheck}</Text>
+                  </View>
+                  <Text style={styles.howToText}>{t[item.howToKey]}</Text>
+                  <TouchableOpacity
+                    style={styles.hideButton}
+                    onPress={() => toggleExpanded(item.id)}
+                  >
+                    <Text style={styles.hideButtonText}>{t.hideHowTo}</Text>
+                    <MaterialCommunityIcons
+                      name="chevron-up"
+                      size={16}
+                      color={COLORS.textMuted}
+                    />
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* Cara Cek Button (when not expanded) */}
+              {!isExpanded && (
+                <TouchableOpacity
+                  style={styles.caraCheckButton}
+                  onPress={() => toggleExpanded(item.id)}
                 >
-                  {t.pass}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.resultButton,
-                  styles.failButton,
-                  results[item.id] === false && styles.failButtonActive,
-                ]}
-                onPress={() => setResult(item.id, false)}
-              >
-                <MaterialCommunityIcons
-                  name="close"
-                  size={20}
-                  color={results[item.id] === false ? COLORS.background : COLORS.error}
-                />
-                <Text
+                  <MaterialCommunityIcons
+                    name="help-circle-outline"
+                    size={16}
+                    color={COLORS.primary}
+                  />
+                  <Text style={styles.caraCheckText}>{t.howToCheck}</Text>
+                </TouchableOpacity>
+              )}
+
+              {/* Pass/Fail Buttons */}
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
                   style={[
-                    styles.resultButtonText,
-                    styles.failButtonText,
-                    results[item.id] === false && styles.resultButtonTextActive,
+                    styles.resultButton,
+                    styles.passButton,
+                    results[item.id] === true && styles.passButtonActive,
                   ]}
+                  onPress={() => setResult(item.id, true)}
                 >
-                  {t.fail}
-                </Text>
-              </TouchableOpacity>
+                  <MaterialCommunityIcons
+                    name="check"
+                    size={20}
+                    color={results[item.id] === true ? COLORS.background : COLORS.success}
+                  />
+                  <Text
+                    style={[
+                      styles.resultButtonText,
+                      results[item.id] === true && styles.resultButtonTextActive,
+                    ]}
+                  >
+                    {t.pass}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.resultButton,
+                    styles.failButton,
+                    results[item.id] === false && styles.failButtonActive,
+                  ]}
+                  onPress={() => setResult(item.id, false)}
+                >
+                  <MaterialCommunityIcons
+                    name="close"
+                    size={20}
+                    color={results[item.id] === false ? COLORS.background : COLORS.error}
+                  />
+                  <Text
+                    style={[
+                      styles.resultButtonText,
+                      styles.failButtonText,
+                      results[item.id] === false && styles.resultButtonTextActive,
+                    ]}
+                  >
+                    {t.fail}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        ))}
+          );
+        })}
 
         {/* Overall Condition */}
         <View style={styles.overallCard}>
@@ -267,25 +347,87 @@ const styles = StyleSheet.create({
     borderColor: COLORS.cardBorder,
   },
   checkItemHeader: {
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
   },
   checkItemInfo: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   checkItemText: {
     marginLeft: SPACING.md,
     flex: 1,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.xs,
+  },
   checkItemTitle: {
     fontSize: FONT_SIZES.lg,
     fontWeight: '600',
     color: COLORS.textPrimary,
-    marginBottom: SPACING.xs,
+    flex: 1,
+  },
+  infoButton: {
+    padding: SPACING.xs,
   },
   checkItemDesc: {
     fontSize: FONT_SIZES.sm,
     color: COLORS.textSecondary,
+  },
+  howToContainer: {
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.md,
+    marginTop: SPACING.sm,
+    marginBottom: SPACING.md,
+    borderLeftWidth: 3,
+    borderLeftColor: COLORS.primary,
+  },
+  howToHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    marginBottom: SPACING.sm,
+  },
+  howToTitle: {
+    fontSize: FONT_SIZES.sm,
+    fontWeight: '600',
+    color: COLORS.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  howToText: {
+    fontSize: FONT_SIZES.md,
+    color: COLORS.textSecondary,
+    lineHeight: 22,
+  },
+  hideButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: SPACING.md,
+    paddingTop: SPACING.sm,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.surfaceBorder,
+    gap: SPACING.xs,
+  },
+  hideButtonText: {
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.textMuted,
+  },
+  caraCheckButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+    marginBottom: SPACING.md,
+    paddingVertical: SPACING.xs,
+  },
+  caraCheckText: {
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.primary,
+    fontWeight: '500',
   },
   buttonRow: {
     flexDirection: 'row',
