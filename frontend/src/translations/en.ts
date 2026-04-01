@@ -147,6 +147,31 @@ export const en = {
   finalContent4: 'Create your User name and Password (can be left empty).',
   finalContent5: 'Turn off all Privacy options (Location, Diagnostic) so Windows runs lighter.',
   
+  // Driver Installation Guide
+  driverGuideTitle: 'Driver Installation Guide',
+  driverGuideDesc: 'Important steps after Windows is installed',
+  driverStep1: "Make sure you're connected to Internet. Run 'Windows Update' repeatedly until everything is installed automatically.",
+  driverStep2: "Use 'Driver Booster' or 'Snappy Driver Installer' (Link available in Downloads Menu) for drivers that aren't detected.",
+  driverStep3: 'Highly recommended to download VGA drivers (Nvidia/AMD/Intel) directly from official websites for maximum gaming performance.',
+  driverTip: 'TIP: After installing VGA driver, restart laptop to activate it.',
+  goToDownloads: 'Go to Download Center',
+  
+  // Troubleshooting Section
+  troubleshootTitle: 'Help: Common Errors',
+  troubleshootDesc: 'Solutions for common installation problems',
+  errorGptMbr: 'Windows cannot be installed to this disk (GPT/MBR)',
+  errorGptMbrSolution: 'Change Partition Scheme in Rufus according to your laptop BIOS type. GPT for modern UEFI, MBR for old Legacy.',
+  errorNoDrive: 'No drive found during installation',
+  errorNoDriveSolution: "Usually happens on Intel Gen 11 and above. You need to download 'Intel VMD/RST' driver from laptop brand website, put it on flashdrive, then click 'Load Driver' during partition selection.",
+  errorStuck: 'Stuck at 0% or File Corrupt',
+  errorStuckSolution: 'Try using a different Flash drive or plug into a different USB port. Make sure ISO file is not corrupted during download.',
+  closeTroubleshoot: 'Close',
+  
+  // Video Tutorial
+  watchVideoTutorial: 'Watch Video Tutorial',
+  videoComingSoon: 'Coming Soon',
+  videoPlaceholder: 'Video tutorial will be available soon',
+  
   // Windows Version Info
   windowsVersionTitle: 'Choose the Right Windows Version',
   windowsProTitle: 'Windows Pro',
@@ -159,8 +184,9 @@ export const en = {
   nextStep: 'Next',
   prevStep: 'Previous',
   continueToOptimization: 'Continue to Optimization',
+  continueToDrivers: 'Next: Install Drivers',
   installComplete: 'Congratulations! Windows is installed.',
-  installCompleteDesc: 'Next step is to optimize Windows for maximum performance.',
+  installCompleteDesc: 'Next step is to install drivers and optimize Windows.',
   
   // Download Center Screen
   downloadCenterScreenTitle: 'Download Center',

@@ -147,6 +147,31 @@ export const id = {
   finalContent4: 'Buat nama User dan Password (bisa dikosongkan).',
   finalContent5: 'Matikan semua opsi Privacy (Location, Diagnostic) agar Windows tidak berat.',
   
+  // Driver Installation Guide
+  driverGuideTitle: 'Panduan Install Driver',
+  driverGuideDesc: 'Langkah penting setelah Windows terinstall',
+  driverStep1: "Pastikan konek Internet. Jalankan 'Windows Update' berulang kali sampai semua terinstall otomatis.",
+  driverStep2: "Gunakan 'Driver Booster' atau 'Snappy Driver Installer' (Link ada di Menu Unduhan) untuk driver yang belum terdeteksi.",
+  driverStep3: 'Sangat disarankan download driver VGA (Nvidia/AMD/Intel) langsung dari situs resminya agar performa gaming maksimal.',
+  driverTip: 'TIP: Setelah install driver VGA, restart laptop untuk mengaktifkannya.',
+  goToDownloads: 'Buka Download Center',
+  
+  // Troubleshooting Section
+  troubleshootTitle: 'Bantuan: Error Umum',
+  troubleshootDesc: 'Solusi untuk masalah yang sering terjadi saat instalasi',
+  errorGptMbr: 'Windows cannot be installed to this disk (GPT/MBR)',
+  errorGptMbrSolution: 'Ubah Partition Scheme di Rufus sesuai jenis BIOS laptop lu. GPT untuk UEFI modern, MBR untuk Legacy lama.',
+  errorNoDrive: 'No drive found during installation',
+  errorNoDriveSolution: "Biasanya terjadi di Intel Gen 11 ke atas. Lu harus download driver 'Intel VMD/RST' dari web merk laptop, taruh di flashdisk, lalu klik 'Load Driver' saat pemilihan partisi.",
+  errorStuck: 'Stuck at 0% or File Corrupt',
+  errorStuckSolution: 'Coba ganti Flashdisk lain atau colok ke port USB yang berbeda. Pastikan file ISO tidak corrupt saat didownload.',
+  closeTroubleshoot: 'Tutup',
+  
+  // Video Tutorial
+  watchVideoTutorial: 'Tonton Video Tutorial',
+  videoComingSoon: 'Coming Soon',
+  videoPlaceholder: 'Video tutorial akan segera tersedia',
+  
   // Windows Version Info
   windowsVersionTitle: 'Pilih Versi Windows yang Tepat',
   windowsProTitle: 'Windows Pro',
@@ -159,8 +184,9 @@ export const id = {
   nextStep: 'Selanjutnya',
   prevStep: 'Sebelumnya',
   continueToOptimization: 'Lanjut ke Optimasi',
+  continueToDrivers: 'Lanjut: Install Driver',
   installComplete: 'Selamat! Windows sudah terinstall.',
-  installCompleteDesc: 'Langkah selanjutnya adalah mengoptimasi Windows agar performa maksimal.',
+  installCompleteDesc: 'Langkah selanjutnya adalah install driver dan mengoptimasi Windows.',
   
   // Download Center Screen
   downloadCenterScreenTitle: 'Download Center',

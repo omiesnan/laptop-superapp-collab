@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Modal,
+  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,7 +18,7 @@ interface StepData {
   id: number;
   titleKey: string;
   descKey: string;
-  icon: 'usb-flash-drive' | 'cogs' | 'harddisk' | 'account-check';
+  icon: 'usb-flash-drive' | 'cogs' | 'harddisk' | 'account-check' | 'chip';
 }
 
 const steps: StepData[] = [
@@ -25,13 +26,29 @@ const steps: StepData[] = [
   { id: 2, titleKey: 'biosUefi', descKey: 'biosUefiDesc', icon: 'cogs' },
   { id: 3, titleKey: 'installation', descKey: 'installationDesc', icon: 'harddisk' },
   { id: 4, titleKey: 'finalSetup', descKey: 'finalSetupDesc', icon: 'account-check' },
+  { id: 5, titleKey: 'driverGuideTitle', descKey: 'driverGuideDesc', icon: 'chip' },
 ];
+
+// Video Tutorial Component
+const VideoPlaceholder = ({ t }: { t: any }) => (
+  <TouchableOpacity style={styles.videoPlaceholder}>
+    <View style={styles.videoIconContainer}>
+      <MaterialCommunityIcons name="play-circle" size={48} color={COLORS.primary} />
+    </View>
+    <View style={styles.videoTextContainer}>
+      <Text style={styles.videoTitle}>{t.watchVideoTutorial}</Text>
+      <Text style={styles.videoSubtitle}>{t.videoComingSoon}</Text>
+    </View>
+  </TouchableOpacity>
+);
 
 export default function InstallGuideScreen() {
   const router = useRouter();
   const { t } = useLanguage();
   const [currentPage, setCurrentPage] = useState(0);
   const [showVersionModal, setShowVersionModal] = useState(false);
+  const [showTroubleshootModal, setShowTroubleshootModal] = useState(false);
+  const [showDriverModal, setShowDriverModal] = useState(false);
 
   const goToPage = (page: number) => {
     if (page >= 0 && page < steps.length) {
@@ -47,6 +64,8 @@ export default function InstallGuideScreen() {
         return (
           <ScrollView style={styles.contentScroll} showsVerticalScrollIndicator={false}>
             <View style={styles.stepContent}>
+              <VideoPlaceholder t={t} />
+              
               <View style={styles.contentItem}>
                 <View style={styles.numberBadge}>
                   <Text style={styles.numberText}>1</Text>
@@ -103,6 +122,8 @@ export default function InstallGuideScreen() {
         return (
           <ScrollView style={styles.contentScroll} showsVerticalScrollIndicator={false}>
             <View style={styles.stepContent}>
+              <VideoPlaceholder t={t} />
+              
               <View style={styles.contentItem}>
                 <View style={styles.numberBadge}>
                   <Text style={styles.numberText}>1</Text>
@@ -174,6 +195,8 @@ export default function InstallGuideScreen() {
         return (
           <ScrollView style={styles.contentScroll} showsVerticalScrollIndicator={false}>
             <View style={styles.stepContent}>
+              <VideoPlaceholder t={t} />
+              
               <View style={styles.contentItem}>
                 <View style={styles.numberBadge}>
                   <Text style={styles.numberText}>1</Text>
@@ -235,6 +258,8 @@ export default function InstallGuideScreen() {
         return (
           <ScrollView style={styles.contentScroll} showsVerticalScrollIndicator={false}>
             <View style={styles.stepContent}>
+              <VideoPlaceholder t={t} />
+              
               <View style={styles.contentItem}>
                 <View style={styles.numberBadge}>
                   <Text style={styles.numberText}>1</Text>
@@ -272,15 +297,95 @@ export default function InstallGuideScreen() {
                 <MaterialCommunityIcons name="check-decagram" size={40} color={COLORS.success} />
                 <Text style={styles.completeTitle}>{t.installComplete}</Text>
                 <Text style={styles.completeDesc}>{t.installCompleteDesc}</Text>
-                
+              </View>
+            </View>
+          </ScrollView>
+        );
+
+      case 4: // Step 5: Driver Guide
+        return (
+          <ScrollView style={styles.contentScroll} showsVerticalScrollIndicator={false}>
+            <View style={styles.stepContent}>
+              <VideoPlaceholder t={t} />
+              
+              <View style={styles.driverHeader}>
+                <MaterialCommunityIcons name="chip" size={40} color={COLORS.primary} />
+                <Text style={styles.driverHeaderText}>{t.driverGuideTitle}</Text>
+              </View>
+
+              <View style={styles.contentItem}>
+                <View style={styles.numberBadge}>
+                  <Text style={styles.numberText}>1</Text>
+                </View>
+                <Text style={styles.contentText}>{t.driverStep1}</Text>
+              </View>
+
+              <View style={styles.contentItem}>
+                <View style={styles.numberBadge}>
+                  <Text style={styles.numberText}>2</Text>
+                </View>
+                <Text style={styles.contentText}>{t.driverStep2}</Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.downloadLinkButton}
+                onPress={() => router.push('/download-center')}
+              >
+                <MaterialCommunityIcons name="download" size={20} color={COLORS.primary} />
+                <Text style={styles.downloadLinkText}>{t.goToDownloads}</Text>
+                <MaterialCommunityIcons name="chevron-right" size={20} color={COLORS.primary} />
+              </TouchableOpacity>
+
+              <View style={styles.contentItem}>
+                <View style={styles.numberBadge}>
+                  <Text style={styles.numberText}>3</Text>
+                </View>
+                <Text style={styles.contentText}>{t.driverStep3}</Text>
+              </View>
+
+              <View style={styles.vgaLinks}>
+                <Text style={styles.vgaTitle}>Download Driver VGA:</Text>
                 <TouchableOpacity
-                  style={styles.optimizeButton}
-                  onPress={() => router.push('/optimization')}
+                  style={styles.vgaButton}
+                  onPress={() => Linking.openURL('https://www.nvidia.com/Download/index.aspx')}
                 >
-                  <Text style={styles.optimizeButtonText}>{t.continueToOptimization}</Text>
-                  <MaterialCommunityIcons name="arrow-right" size={20} color={COLORS.background} />
+                  <View style={[styles.vgaBadge, { backgroundColor: '#76B900' }]}>
+                    <Text style={styles.vgaBadgeText}>NVIDIA</Text>
+                  </View>
+                  <Text style={styles.vgaUrl}>nvidia.com/Download</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.vgaButton}
+                  onPress={() => Linking.openURL('https://www.amd.com/en/support')}
+                >
+                  <View style={[styles.vgaBadge, { backgroundColor: '#ED1C24' }]}>
+                    <Text style={styles.vgaBadgeText}>AMD</Text>
+                  </View>
+                  <Text style={styles.vgaUrl}>amd.com/support</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.vgaButton}
+                  onPress={() => Linking.openURL('https://www.intel.com/content/www/us/en/download-center/home.html')}
+                >
+                  <View style={[styles.vgaBadge, { backgroundColor: '#0071C5' }]}>
+                    <Text style={styles.vgaBadgeText}>INTEL</Text>
+                  </View>
+                  <Text style={styles.vgaUrl}>intel.com/download-center</Text>
                 </TouchableOpacity>
               </View>
+
+              <View style={styles.tipBox}>
+                <MaterialCommunityIcons name="lightbulb-on" size={18} color={COLORS.warning} />
+                <Text style={styles.tipText}>{t.driverTip}</Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.optimizeButton}
+                onPress={() => router.push('/optimization')}
+              >
+                <Text style={styles.optimizeButtonText}>{t.continueToOptimization}</Text>
+                <MaterialCommunityIcons name="arrow-right" size={20} color={COLORS.background} />
+              </TouchableOpacity>
             </View>
           </ScrollView>
         );
@@ -305,43 +410,58 @@ export default function InstallGuideScreen() {
           />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t.installGuideMasterclass}</Text>
-        <View style={{ width: 40 }} />
+        <TouchableOpacity
+          style={styles.helpButton}
+          onPress={() => setShowTroubleshootModal(true)}
+        >
+          <MaterialCommunityIcons
+            name="help-circle"
+            size={24}
+            color={COLORS.warning}
+          />
+        </TouchableOpacity>
       </View>
 
       {/* Progress Indicator */}
-      <View style={styles.progressContainer}>
-        {steps.map((step, index) => (
-          <TouchableOpacity
-            key={step.id}
-            style={styles.progressItem}
-            onPress={() => goToPage(index)}
-          >
-            <View
-              style={[
-                styles.progressDot,
-                index <= currentPage && styles.progressDotActive,
-              ]}
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.progressScrollContent}
+      >
+        <View style={styles.progressContainer}>
+          {steps.map((step, index) => (
+            <TouchableOpacity
+              key={step.id}
+              style={styles.progressItem}
+              onPress={() => goToPage(index)}
             >
-              <Text
-                style={[
-                  styles.progressNumber,
-                  index <= currentPage && styles.progressNumberActive,
-                ]}
-              >
-                {step.id}
-              </Text>
-            </View>
-            {index < steps.length - 1 && (
               <View
                 style={[
-                  styles.progressLine,
-                  index < currentPage && styles.progressLineActive,
+                  styles.progressDot,
+                  index <= currentPage && styles.progressDotActive,
                 ]}
-              />
-            )}
-          </TouchableOpacity>
-        ))}
-      </View>
+              >
+                <Text
+                  style={[
+                    styles.progressNumber,
+                    index <= currentPage && styles.progressNumberActive,
+                  ]}
+                >
+                  {step.id}
+                </Text>
+              </View>
+              {index < steps.length - 1 && (
+                <View
+                  style={[
+                    styles.progressLine,
+                    index < currentPage && styles.progressLineActive,
+                  ]}
+                />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
 
       {/* Step Header */}
       <View style={styles.stepHeader}>
@@ -407,7 +527,7 @@ export default function InstallGuideScreen() {
               currentPage === steps.length - 1 && styles.navButtonTextDisabled,
             ]}
           >
-            {t.nextStep}
+            {currentPage === 3 ? t.continueToDrivers : t.nextStep}
           </Text>
           <MaterialCommunityIcons
             name="arrow-right"
@@ -475,6 +595,69 @@ export default function InstallGuideScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Troubleshooting Modal */}
+      <Modal
+        visible={showTroubleshootModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowTroubleshootModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.troubleshootContainer}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={styles.troubleshootHeader}>
+                <MaterialCommunityIcons name="wrench" size={32} color={COLORS.warning} />
+                <Text style={styles.troubleshootTitle}>{t.troubleshootTitle}</Text>
+              </View>
+              <Text style={styles.troubleshootDesc}>{t.troubleshootDesc}</Text>
+
+              {/* Error 1: GPT/MBR */}
+              <View style={styles.errorCard}>
+                <View style={styles.errorHeader}>
+                  <MaterialCommunityIcons name="alert-circle" size={24} color={COLORS.error} />
+                  <Text style={styles.errorTitle}>{t.errorGptMbr}</Text>
+                </View>
+                <View style={styles.solutionBox}>
+                  <Text style={styles.solutionLabel}>Solusi:</Text>
+                  <Text style={styles.solutionText}>{t.errorGptMbrSolution}</Text>
+                </View>
+              </View>
+
+              {/* Error 2: No Drive */}
+              <View style={styles.errorCard}>
+                <View style={styles.errorHeader}>
+                  <MaterialCommunityIcons name="alert-circle" size={24} color={COLORS.error} />
+                  <Text style={styles.errorTitle}>{t.errorNoDrive}</Text>
+                </View>
+                <View style={styles.solutionBox}>
+                  <Text style={styles.solutionLabel}>Solusi:</Text>
+                  <Text style={styles.solutionText}>{t.errorNoDriveSolution}</Text>
+                </View>
+              </View>
+
+              {/* Error 3: Stuck/Corrupt */}
+              <View style={styles.errorCard}>
+                <View style={styles.errorHeader}>
+                  <MaterialCommunityIcons name="alert-circle" size={24} color={COLORS.error} />
+                  <Text style={styles.errorTitle}>{t.errorStuck}</Text>
+                </View>
+                <View style={styles.solutionBox}>
+                  <Text style={styles.solutionLabel}>Solusi:</Text>
+                  <Text style={styles.solutionText}>{t.errorStuckSolution}</Text>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={styles.troubleshootCloseButton}
+                onPress={() => setShowTroubleshootModal(false)}
+              >
+                <Text style={styles.troubleshootCloseText}>{t.closeTroubleshoot}</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -499,17 +682,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  helpButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   headerTitle: {
     fontSize: FONT_SIZES.lg,
     fontWeight: 'bold',
     color: COLORS.primary,
   },
+  progressScrollContent: {
+    paddingHorizontal: SPACING.md,
+  },
   progressContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: SPACING.md,
-    paddingHorizontal: SPACING.lg,
   },
   progressItem: {
     flexDirection: 'row',
@@ -538,7 +728,7 @@ const styles = StyleSheet.create({
     color: COLORS.background,
   },
   progressLine: {
-    width: 24,
+    width: 20,
     height: 3,
     backgroundColor: COLORS.surfaceBorder,
     marginHorizontal: 2,
@@ -597,6 +787,39 @@ const styles = StyleSheet.create({
   },
   stepContent: {
     paddingBottom: SPACING.xl,
+  },
+  videoPlaceholder: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.md,
+    marginBottom: SPACING.lg,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceBorder,
+    borderStyle: 'dashed',
+  },
+  videoIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: BORDER_RADIUS.md,
+    backgroundColor: COLORS.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  videoTextContainer: {
+    marginLeft: SPACING.md,
+    flex: 1,
+  },
+  videoTitle: {
+    fontSize: FONT_SIZES.md,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+  },
+  videoSubtitle: {
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.textMuted,
+    marginTop: SPACING.xs,
   },
   contentItem: {
     flexDirection: 'row',
@@ -810,6 +1033,69 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
+  driverHeader: {
+    alignItems: 'center',
+    marginBottom: SPACING.lg,
+    paddingVertical: SPACING.md,
+  },
+  driverHeaderText: {
+    fontSize: FONT_SIZES.xl,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    marginTop: SPACING.sm,
+  },
+  downloadLinkButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
+    marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    gap: SPACING.sm,
+  },
+  downloadLinkText: {
+    flex: 1,
+    color: COLORS.primary,
+    fontWeight: '600',
+    fontSize: FONT_SIZES.md,
+  },
+  vgaLinks: {
+    backgroundColor: COLORS.surface,
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
+    marginBottom: SPACING.md,
+  },
+  vgaTitle: {
+    color: COLORS.textPrimary,
+    fontWeight: '600',
+    fontSize: FONT_SIZES.sm,
+    marginBottom: SPACING.md,
+  },
+  vgaButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+    padding: SPACING.sm,
+    borderRadius: BORDER_RADIUS.sm,
+    marginBottom: SPACING.sm,
+  },
+  vgaBadge: {
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
+    borderRadius: BORDER_RADIUS.sm,
+    marginRight: SPACING.sm,
+  },
+  vgaBadgeText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: FONT_SIZES.xs,
+  },
+  vgaUrl: {
+    color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.sm,
+  },
   optimizeButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -958,5 +1244,76 @@ const styles = StyleSheet.create({
   modalCloseText: {
     color: COLORS.textMuted,
     fontSize: FONT_SIZES.md,
+  },
+  // Troubleshoot Modal
+  troubleshootContainer: {
+    backgroundColor: COLORS.background,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.lg,
+    maxHeight: '85%',
+  },
+  troubleshootHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+    marginBottom: SPACING.sm,
+  },
+  troubleshootTitle: {
+    fontSize: FONT_SIZES.xl,
+    fontWeight: 'bold',
+    color: COLORS.warning,
+  },
+  troubleshootDesc: {
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.textSecondary,
+    marginBottom: SPACING.lg,
+  },
+  errorCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.error,
+  },
+  errorHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: SPACING.sm,
+    marginBottom: SPACING.sm,
+  },
+  errorTitle: {
+    flex: 1,
+    fontSize: FONT_SIZES.md,
+    fontWeight: '600',
+    color: COLORS.error,
+  },
+  solutionBox: {
+    backgroundColor: COLORS.background,
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.sm,
+  },
+  solutionLabel: {
+    fontSize: FONT_SIZES.sm,
+    fontWeight: '600',
+    color: COLORS.success,
+    marginBottom: SPACING.xs,
+  },
+  solutionText: {
+    fontSize: FONT_SIZES.sm,
+    color: COLORS.textSecondary,
+    lineHeight: 22,
+  },
+  troubleshootCloseButton: {
+    alignItems: 'center',
+    padding: SPACING.md,
+    marginTop: SPACING.md,
+    backgroundColor: COLORS.surface,
+    borderRadius: BORDER_RADIUS.md,
+  },
+  troubleshootCloseText: {
+    color: COLORS.textPrimary,
+    fontSize: FONT_SIZES.md,
+    fontWeight: '600',
   },
 });
