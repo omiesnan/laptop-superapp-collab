@@ -104,15 +104,63 @@ export const en = {
   
   // Install Guide Screen
   installGuideScreenTitle: 'Windows Install Guide',
+  installGuideMasterclass: 'Windows Install Masterclass',
   step: 'Step',
-  preparation: 'Preparation',
-  preparationDesc: 'Prepare a bootable USB of at least 8GB. Download Windows ISO from official Microsoft site. Use Rufus or Media Creation Tool to create bootable USB.',
+  
+  // Step 1: Preparation
+  preparation: 'Preparation (Hardware & Software)',
+  preparationDesc: 'Prepare a bootable USB for Windows installation',
+  preparationContent1: 'Prepare an empty flash drive with minimum 8GB',
+  preparationWarning1: 'IMPORTANT: All data on the flash drive will be deleted!',
+  preparationContent2: 'Download Windows 10/11 ISO file from the official Microsoft website.',
+  preparationContent3: "Use 'Rufus' software. Select Partition Scheme 'GPT' for newer laptops (UEFI) or 'MBR' for older laptops (Legacy).",
+  preparationContent4: "Click 'Start' and wait until status shows 'Ready'. Your bootable USB is now ready.",
+  
+  // Step 2: BIOS/UEFI
   biosUefi: 'BIOS/UEFI Settings',
-  biosUefiDesc: 'Enter BIOS by pressing F2/Del/F12 during boot. Set boot priority with USB first. Enable UEFI mode if available.',
-  installation: 'Installation Process',
-  installationDesc: 'Select language and region. Click "Install Now". Choose "Custom Installation" for clean install. Format desired partition and proceed with installation.',
+  biosUefiDesc: 'Set boot priority to boot from USB',
+  biosContent1: 'Plug the flash drive into the laptop while it is turned off.',
+  biosContent2: 'Turn on the laptop and immediately press the BIOS key repeatedly (usually F2, F12, Del, or Esc depending on brand).',
+  biosContent3: "Enter the 'Boot' or 'Boot Priority' menu.",
+  biosContent4: "Change the order so 'USB Flashdrive' is at the top position (#1).",
+  biosContent5: "Press F10 to 'Save & Exit'. The laptop will automatically restart to the Windows installation menu.",
+  biosTip: 'TIP: If you don\'t know the BIOS key, try pressing all F1-F12 keys alternately when the logo appears.',
+  
+  // Step 3: Installation & Partition
+  installation: 'Installation & Partition Process',
+  installationDesc: 'Critical step - be careful with partitions!',
+  installContent1: "Select Language and Keyboard Layout (US), then click 'Install Now'.",
+  installContent2: "Select 'I don't have a product key' if you want to activate later.",
+  installWarning1: "IMPORTANT: Select 'Custom: Install Windows only (advanced)' option.",
+  installContent3: 'In the Partition menu, delete your old Drive C.',
+  installWarning2: 'CAUTION: Do not delete Data partitions (D/E) if any!',
+  installContent4: "Select 'Unallocated Space' from the deleted drive, then click 'Next'. Wait until 100% and the laptop restarts automatically.",
+  
+  // Step 4: Final Setup
+  finalSetup: 'Final Setup & Account Bypass (OOBE)',
+  finalSetupDesc: 'Initial Windows configuration and account bypass tricks',
+  finalContent1: 'Select Region (your country) and Keyboard (US).',
+  finalTrick: 'BYPASS TRICK:',
+  finalContent2: "If asked to connect to internet/Microsoft account but you want to use a Local Account, press 'Shift + F10' on keyboard, type:",
+  finalCommand: 'OOBE\\BYPASSNRO',
+  finalContent3: "then Enter. Laptop will restart and show 'I don't have internet' option.",
+  finalContent4: 'Create your User name and Password (can be left empty).',
+  finalContent5: 'Turn off all Privacy options (Location, Diagnostic) so Windows runs lighter.',
+  
+  // Windows Version Info
+  windowsVersionTitle: 'Choose the Right Windows Version',
+  windowsProTitle: 'Windows Pro',
+  windowsProDesc: 'Full features (BitLocker, Remote Desktop). Suitable for work & professionals.',
+  windowsHomeTitle: 'Windows Home',
+  windowsHomeDesc: 'Lighter and suitable for home users/students.',
+  windowsVersionNote: 'Note: Make sure to install the version that matches your License.',
+  
+  // Navigation
   nextStep: 'Next',
   prevStep: 'Previous',
+  continueToOptimization: 'Continue to Optimization',
+  installComplete: 'Congratulations! Windows is installed.',
+  installCompleteDesc: 'Next step is to optimize Windows for maximum performance.',
   
   // Download Center Screen
   downloadCenterScreenTitle: 'Download Center',

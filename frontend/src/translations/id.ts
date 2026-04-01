@@ -104,15 +104,63 @@ export const id = {
   
   // Install Guide Screen
   installGuideScreenTitle: 'Panduan Install Windows',
+  installGuideMasterclass: 'Masterclass Install Windows',
   step: 'Langkah',
-  preparation: 'Persiapan',
-  preparationDesc: 'Siapkan USB bootable minimal 8GB. Download Windows ISO dari situs resmi Microsoft. Gunakan Rufus atau Media Creation Tool untuk membuat bootable USB.',
+  
+  // Step 1: Persiapan
+  preparation: 'Persiapan (Hardware & Software)',
+  preparationDesc: 'Siapkan USB bootable untuk instalasi Windows',
+  preparationContent1: 'Siapkan Flashdisk kosong minimal 8GB',
+  preparationWarning1: 'PENTING: Semua data di flashdisk akan dihapus!',
+  preparationContent2: 'Download file ISO Windows 10/11 dari situs resmi Microsoft.',
+  preparationContent3: "Gunakan software 'Rufus'. Pilih Partition Scheme 'GPT' untuk laptop keluaran terbaru (UEFI) atau 'MBR' untuk laptop lama (Legacy).",
+  preparationContent4: "Klik 'Start' dan tunggu sampai status 'Ready'. Sekarang USB Bootable lu siap.",
+  
+  // Step 2: BIOS/UEFI
   biosUefi: 'Pengaturan BIOS/UEFI',
-  biosUefiDesc: 'Masuk ke BIOS dengan menekan F2/Del/F12 saat booting. Atur boot priority dengan USB di urutan pertama. Aktifkan UEFI mode jika tersedia.',
-  installation: 'Proses Instalasi',
-  installationDesc: 'Pilih bahasa dan region. Klik "Install Now". Pilih "Custom Installation" untuk instalasi bersih. Format partisi yang diinginkan dan lanjutkan instalasi.',
+  biosUefiDesc: 'Atur boot priority agar laptop booting dari USB',
+  biosContent1: 'Colokkan Flashdisk ke laptop dalam kondisi mati.',
+  biosContent2: 'Nyalakan laptop dan segera tekan tombol BIOS berulang kali (biasanya F2, F12, Del, atau Esc tergantung merk).',
+  biosContent3: "Masuk ke menu 'Boot' atau 'Boot Priority'.",
+  biosContent4: "Ubah urutan agar 'USB Flashdrive' berada di posisi paling atas (#1).",
+  biosContent5: "Tekan F10 untuk 'Save & Exit'. Laptop akan restart otomatis ke menu instalasi Windows.",
+  biosTip: 'TIP: Jika tidak tahu tombol BIOS, coba tekan semua tombol F1-F12 secara bergantian saat logo muncul.',
+  
+  // Step 3: Instalasi & Partisi
+  installation: 'Proses Instalasi & Partisi',
+  installationDesc: 'Langkah kritis - hati-hati dengan partisi!',
+  installContent1: "Pilih Bahasa dan Keyboard Layout (US), lalu klik 'Install Now'.",
+  installContent2: "Pilih 'I don't have a product key' jika ingin aktivasi nanti.",
+  installWarning1: "PENTING: Pilih opsi 'Custom: Install Windows only (advanced)'.",
+  installContent3: 'Di menu Partisi, hapus (Delete) Drive C lama lu.',
+  installWarning2: 'HATI-HATI: Jangan hapus partisi Data (D/E) jika ada!',
+  installContent4: "Pilih 'Unallocated Space' hasil delete tadi, lalu klik 'Next'. Tunggu sampai 100% dan laptop restart sendiri.",
+  
+  // Step 4: Setup Akhir
+  finalSetup: 'Setup Akhir & Bypass Akun (OOBE)',
+  finalSetupDesc: 'Konfigurasi awal Windows dan trik bypass akun',
+  finalContent1: 'Pilih Region (Indonesia) dan Keyboard (US).',
+  finalTrick: 'TRIK BYPASS:',
+  finalContent2: "Jika diminta konek internet/akun Microsoft tapi lu ingin pakai Akun Lokal, tekan 'Shift + F10' di keyboard, ketik:",
+  finalCommand: 'OOBE\\BYPASSNRO',
+  finalContent3: "lalu Enter. Laptop akan restart dan muncul pilihan 'I don't have internet'.",
+  finalContent4: 'Buat nama User dan Password (bisa dikosongkan).',
+  finalContent5: 'Matikan semua opsi Privacy (Location, Diagnostic) agar Windows tidak berat.',
+  
+  // Windows Version Info
+  windowsVersionTitle: 'Pilih Versi Windows yang Tepat',
+  windowsProTitle: 'Windows Pro',
+  windowsProDesc: 'Fitur lengkap (BitLocker, Remote Desktop). Cocok buat kerja & profesional.',
+  windowsHomeTitle: 'Windows Home',
+  windowsHomeDesc: 'Lebih ringan dan pas buat user rumahan/pelajar.',
+  windowsVersionNote: 'Catatan: Pastikan install versi yang sesuai dengan Lisensi yang lu miliki.',
+  
+  // Navigation
   nextStep: 'Selanjutnya',
   prevStep: 'Sebelumnya',
+  continueToOptimization: 'Lanjut ke Optimasi',
+  installComplete: 'Selamat! Windows sudah terinstall.',
+  installCompleteDesc: 'Langkah selanjutnya adalah mengoptimasi Windows agar performa maksimal.',
   
   // Download Center Screen
   downloadCenterScreenTitle: 'Download Center',
