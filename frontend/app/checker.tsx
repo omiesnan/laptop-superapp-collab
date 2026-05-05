@@ -120,14 +120,14 @@ export default function CheckerScreen() {
   const router = useRouter();
   const { t, language } = useLanguage();
   const viewShotRef = useRef<ViewShot>(null);
-  
+
   const initialResults: Record<string, boolean | null> = {};
   const initialNotes: Record<string, string> = {};
   checkItems.forEach(item => {
     initialResults[item.id] = null;
     initialNotes[item.id] = '';
   });
-  
+
   const [results, setResults] = useState<Record<string, boolean | null>>(initialResults);
   const [notes, setNotes] = useState<Record<string, string>>(initialNotes);
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
@@ -166,7 +166,7 @@ export default function CheckerScreen() {
     if (values.length === 0) return null;
     const passCount = values.filter(v => v === true).length;
     const ratio = passCount / values.length;
-    
+
     if (ratio === 1) return { label: t.excellent, color: COLORS.success, colorHex: '#4CAF50' };
     if (ratio >= 0.75) return { label: t.good, color: COLORS.primary, colorHex: '#00BFA6' };
     if (ratio >= 0.5) return { label: t.needsAttention, color: COLORS.warning, colorHex: '#FFC107' };
@@ -228,6 +228,7 @@ export default function CheckerScreen() {
       <html>
       <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
         <title>${t.exportCertTitle}</title>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -403,28 +404,30 @@ export default function CheckerScreen() {
     try {
       setIsGeneratingPdf(true);
       const html = generatePdfHtml();
-      
-      const { uri } = await Print.printToFileAsync({
-        html,
-        base64: false,
-      });
 
       if (Platform.OS === 'web') {
-        // For web, print directly
+        // For web, print directly using browser's print dialog
         await Print.printAsync({ html });
       } else {
-        // For mobile, share the PDF
+        // For mobile, generate file first then share
+        const { uri } = await Print.printToFileAsync({
+          html,
+          base64: false,
+          width: 612,
+          height: 792,
+        });
+
         await Sharing.shareAsync(uri, {
           mimeType: 'application/pdf',
           dialogTitle: t.downloadPdf,
           UTI: 'com.adobe.pdf',
         });
       }
-      
+
       Alert.alert(t.pdfGenerated);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating PDF:', error);
-      Alert.alert('Error', 'Failed to generate PDF');
+      Alert.alert('Error', `Failed to generate PDF: ${error?.message || error}`);
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -496,7 +499,7 @@ export default function CheckerScreen() {
         {/* Checklist Items */}
         {checkItems.map(item => {
           const isExpanded = expandedItems[item.id];
-          
+
           return (
             <View key={item.id} style={styles.checkItem}>
               {/* Header with Title and Info Button */}
@@ -539,7 +542,7 @@ export default function CheckerScreen() {
                     <Text style={styles.howToTitle}>{t.howToCheck}</Text>
                   </View>
                   <Text style={styles.howToText}>{t[item.howToKey]}</Text>
-                  
+
                   {/* Online Tool Button */}
                   {item.onlineToolUrl && (
                     <TouchableOpacity
@@ -554,7 +557,7 @@ export default function CheckerScreen() {
                       <Text style={styles.onlineToolText}>{t.openOnlineTool}</Text>
                     </TouchableOpacity>
                   )}
-                  
+
                   <TouchableOpacity
                     style={styles.hideButton}
                     onPress={() => toggleExpanded(item.id)}
@@ -583,7 +586,7 @@ export default function CheckerScreen() {
                     />
                     <Text style={styles.caraCheckText}>{t.howToCheck}</Text>
                   </TouchableOpacity>
-                  
+
                   {item.onlineToolUrl && (
                     <TouchableOpacity
                       style={styles.quickToolButton}
