@@ -20,6 +20,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ViewShot from 'react-native-view-shot';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
 import { useLanguage } from '../src/context/LanguageContext';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../src/constants/theme';
 
@@ -413,18 +414,28 @@ export default function CheckerScreen() {
         const { uri } = await Print.printToFileAsync({
           html,
           base64: false,
-          width: 612,
-          height: 792,
         });
 
-        await Sharing.shareAsync(uri, {
-          mimeType: 'application/pdf',
-          dialogTitle: t.downloadPdf,
-          UTI: 'com.adobe.pdf',
+        // Ensure the file is named properly with .pdf extension
+        // Move it to Document Directory to ensure it's accessible for sharing
+        const newUri = `${FileSystem.documentDirectory}Hasil_Pengecekan_Laptop.pdf`;
+        await FileSystem.moveAsync({
+          from: uri,
+          to: newUri,
         });
+
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(newUri, {
+            mimeType: 'application/pdf',
+            dialogTitle: t.downloadPdf,
+            UTI: 'com.adobe.pdf',
+          });
+        } else {
+          Alert.alert('Error', 'Sharing is not available on this device');
+        }
       }
 
-      Alert.alert(t.pdfGenerated);
+      Alert.alert(t.pdfGenerated || 'Success', 'PDF has been generated successfully!');
     } catch (error: any) {
       console.error('Error generating PDF:', error);
       Alert.alert('Error', `Failed to generate PDF: ${error?.message || error}`);
